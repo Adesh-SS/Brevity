@@ -1,4 +1,4 @@
-# Brevity Summarizer - Model Development
+# Brevity Summarizer
 
 This repository contains the development code for the summarization model used in the Brevity application. It leverages **Hugging Face Transformers** and **PyTorch** to perform abstractive summarization using a fine-tuned version of **DistilBART**.
 
