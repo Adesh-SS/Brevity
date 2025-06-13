@@ -1,0 +1,36 @@
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore Jupyter notebook checkpoints
+*.ipynb
+*.ipynb_checkpoints/
+
+# Ignore virtual environments (your venv is named "brevity")
+brevity/
+brevity_date2/
+distil_summarizer2-p2/
+
+# Ignore environment config files
+*.env
+
+# Ignore tokenized data or checkpoints
+tokenized_*
+*.ckpt
+*.pt
+*.bin
+*.h5
+
+# Ignore sample/testing files (if you want)
+sample.txt
+README.md
+
+# Optional: ignore large log or debug files
+*.log
+*.tmp
+
+# Git files
+.git/
+.gitignore
