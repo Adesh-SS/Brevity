@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
+from difflib import SequenceMatcher
 
 app = Flask(__name__)
 
@@ -12,14 +13,39 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
 model.eval()
 
-def chunk_text(text, chunk_size=512):
+def is_similar(s1, s2, threshold = 0.85):
+    return SequenceMatcher(None, s1.strip(), s2.strip()).ratio() > threshold
+
+def filter_redundant(summaries):
+    filtered = []
+
+    for summary in summaries:
+        if all(not is_similar(summary, existing) for existing in filtered):
+            filtered.append(summary)
+    return filtered
+
+def chunk_text(text, chunk_size=512, overlap = 50):
+    """ Function to split text into chunks smaller than the max token length. """
     tokens = tokenizer.encode(text, truncation=False)
-    return [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
+
+    stride = chunk_size - overlap
+    chunks = []
+
+    for i in range(0, len(tokens), stride):
+        chunk = tokens[i:i + chunk_size]
+        chunks.append(chunk)
+
+        # Stop if the chunk is smaller than chunk_size (last part)
+        if i + chunk_size >= len(tokens):
+            break
+    return chunks
 
 def summarize_chunks(chunks):
     summaries = []
+
     for chunk in chunks:
         chunk_text = tokenizer.decode(chunk, skip_special_tokens=True)
+        
         chunk_size = 512 if len(chunk_text.split()) < 1000 else 1024
         target_length = 150 if len(chunk_text.split()) < 1000 else 250
 
@@ -46,7 +72,10 @@ def summarize_chunks(chunks):
         summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
         summaries.append(summary)
 
-    return " ".join(summaries)
+    summaries = filter_redundant(summaries)
+
+    combined_summary = " ".join(summaries)
+    return combined_summary
 
 def summarize_text(text):
     chunks = chunk_text(text)
