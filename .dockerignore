@@ -12,6 +12,7 @@ __pycache__/
 brevity/
 brevity_date2/
 distil_summarizer2-p2/
+distil_summarizer2-p4/
 
 # Ignore environment config files
 *.env

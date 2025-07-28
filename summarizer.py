@@ -6,8 +6,8 @@ from difflib import SequenceMatcher
 app = Flask(__name__)
 
 # Load model and tokenizer once at startup
-model = AutoModelForSeq2SeqLM.from_pretrained("./brevity_small_stage3")
-tokenizer = AutoTokenizer.from_pretrained("./brevity_small_stage3")
+model = AutoModelForSeq2SeqLM.from_pretrained("./brevity_small_stage5")
+tokenizer = AutoTokenizer.from_pretrained("./brevity_small_stage5")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model.to(device)
@@ -96,6 +96,10 @@ def summarize_api():
     input_text = data["text"]
     summary = summarize_text(input_text)
     return jsonify({"summary": summary})
+
+@app.route("/health")   
+def health():
+    return "ok", 200
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
