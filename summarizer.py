@@ -40,7 +40,7 @@ def chunk_text(text, chunk_size=512, overlap = 50):
             break
     return chunks
 
-def summarize_chunks(chunks):
+def summarize_chunks(chunks, length_control="Full Picture"):
     summaries = []
 
     for chunk in chunks:
@@ -75,11 +75,38 @@ def summarize_chunks(chunks):
     summaries = filter_redundant(summaries)
 
     combined_summary = " ".join(summaries)
-    return combined_summary
 
-def summarize_text(text):
+    if length_control == "Full Picture":
+        return combined_summary
+    
+    snapshot_target_length = 80
+    snapshot_min_len = 40
+
+    inputs = tokenizer(
+        combined_summary,
+        return_tensors="pt",
+        max_length=1024,
+        truncation=True,
+        padding="max_length"
+    ).to(device)
+
+    with torch.no_grad():
+        snapshot_ids = model.generate(
+            input_ids=inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_length=snapshot_target_length,
+            min_length=snapshot_min_len,
+            num_beams=4,
+            early_stopping=True,
+            length_penalty=1.5,
+            no_repeat_ngram_size=3,
+        )
+    
+    return tokenizer.decode(snapshot_ids[0], skip_special_tokens=True)
+
+def summarize_text(text, length_control="Full Picture"):
     chunks = chunk_text(text)
-    final_summary = summarize_chunks(chunks)
+    final_summary = summarize_chunks(chunks, length_control)
 
     # # Optionally, save to file
     # with open('summary_output.txt', 'w', encoding='utf-8') as f:
@@ -94,8 +121,9 @@ def summarize_api():
         return jsonify({"error": "Please provide 'text' field in JSON body."}), 400
 
     input_text = data["text"]
-    summary = summarize_text(input_text)
-    return jsonify({"summary": summary})
+    length_control = data.get("length", "Full Picture")
+    summary = summarize_text(input_text, length_control)
+    return jsonify({"summary": summary, "length": length_control})
 
 @app.route("/health")   
 def health():
