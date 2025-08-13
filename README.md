@@ -41,4 +41,25 @@ python summarizer.py
 
 The summarizer file sends the summary of the text as response to the request provided.
 
+### 7. Build docker image
+The above is also docker enabled
+After cloning and training the model, navigate to the location where the docker file is present, and open cmd.
+Run this to build the docker image
+```bash
+docker build -t <image name> .
+```
+
+### 8. Run the docker image in a container
+I highly recommend creating in a custom network then using the default.
+After you have created the custome network for the model to run.
+Run this to start and run the container
+```bash
+docker run -d \
+  --network <your_network_name> \
+  -p <system port>:<docker port> \
+  --name <container name> \
+  <docker image name>
+```
+Access the model using the contanier name created rather than using localhost.
+
 Note: The Model summary token length is only 1024
